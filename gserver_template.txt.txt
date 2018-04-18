@@ -1,0 +1,77 @@
+import edu.uab.cs203.Team;
+import edu.uab.cs203.network.GymServer;
+
+public class GServer  extends UnicastRemoteObject implements GymServer {
+	
+	protected GServer() throws RemoteException {
+		super();
+		// TODO Auto-generated constructor stub
+	}
+
+	private Team listA;
+	private Team listB;
+	private String message;
+	private boolean Bisready;
+	private boolean Aisready;
+	//side stuff
+	public static void main(String[] args) {
+		try {
+			Runtime.getRuntime().exec("rmiregistry 9001");
+			Registry registry = LocateRegistry.createRegistry(9001);
+			GServer server =new GServer();
+			registry.bind("computeServer",server);
+		} catch (IOException | AlreadyBoundException e) {
+			e.printStackTrace();
+			System.exit(-1);
+		}
+		System.out.print("ready to receive tasks");
+		return;
+	}
+//end of slides
+	@Override
+	public String networkToString() throws RemoteException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void printMessage(String message) throws RemoteException {
+		this.message = message;
+				System.out.println("This will, like, be a message or something..");	
+	}
+
+	@Override
+	public void registerClientA(String host, int port, String registryName) throws RemoteException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void registerClientB(String host, int port, String registryName) throws RemoteException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setTeamA(Team teamA) throws RemoteException {
+		this.listA = teamA;
+	}
+
+	@Override
+	public void setTeamAReady(boolean ready) throws RemoteException {
+		// TODO Auto-generated method stub
+	}
+
+	@Override
+	public void setTeamB(Team teamB) throws RemoteException {
+		this.listB = teamB;
+		
+	}
+
+	@Override
+	public void setTeamBReady(boolean ready) throws RemoteException {
+		// TODO Auto-generated method stub
+		
+	}
+
+}
