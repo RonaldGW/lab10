@@ -29,16 +29,17 @@ public class GServer extends UnicastRemoteObject implements GymServer, NetworkGy
 	
 	public static void main(String[] args) {
 		try {
-			Runtime.getRuntime().exec("rmiregistry 10002");
-			Registry registry = LocateRegistry.createRegistry(10002);
+			Runtime.getRuntime().exec("rmiregistry 10005");
+			Registry registry = LocateRegistry.createRegistry(10005);
 			GServer server =new GServer();
 			registry.bind("GServer",server);
+			System.out.print("ready to receive tasks");
+			
 		} catch (Exception  e) {
 			System.out.println("System Error:" + e.toString());
 			e.printStackTrace();
 
 		}
-		System.out.print("ready to receive tasks");
 		return;
 	}
 
@@ -72,9 +73,9 @@ public class GServer extends UnicastRemoteObject implements GymServer, NetworkGy
 	@Override
 	public void registerClientB(String host, int port, String registryName) throws RemoteException {
 		System.out.println("Registering client: " + host + ":" + port + ":" + registryName);
-			GClientA client;
+			GClientB client;
 		try {
-		client = (GClientA)LocateRegistry.getRegistry(host, port).lookup(registryName);
+		client = (GClientB)LocateRegistry.getRegistry(host, port).lookup(registryName);
 		this.ClientB=client;
 		this.Bisready = true;
 		client.printMessage("You have connected!");
@@ -87,13 +88,20 @@ public class GServer extends UnicastRemoteObject implements GymServer, NetworkGy
 
 	@Override
 	public void setTeamAReady(boolean ready) throws RemoteException {
-		
+	if(this.ClientA==null) {
+		this.Aisready=false;
+	}
+	this.Aisready=true;
 	}
 
 	@Override
 	public void setTeamBReady(boolean ready) throws RemoteException {
-		
-	}
+		if(this.ClientB==null) {
+			this.Bisready=false;
+		}
+		this.Bisready=true;
+		}
+
 
 	@Override
 	public void executeTurn() {

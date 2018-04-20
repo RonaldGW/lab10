@@ -12,20 +12,20 @@ import edu.uab.cs203.lab09.Hashmon;
 import edu.uab.cs203.network.GymClient;
 import edu.uab.cs203.network.GymServer;
 
-public class GClientA implements GymClient, Serializable{
-private Team<Objectmon> teamA;
+public class GClientB implements GymClient, Serializable{
+private Team<Objectmon> teamB;
 	public static void main(String[] args) throws RemoteException {
-	GClientA client = new GClientA();
+	GClientB client = new GClientB();
 	Team<Objectmon> team = new BasicTeam<>();
 	client.setTeam(team);
-	String host = "localhost";
+	String host = "localhost2";
 	int port =10005;
 	
 	try {
 		Registry registry = LocateRegistry.getRegistry(host,port);
 		GymServer stub =(GymServer)registry.lookup("GServer");
 		String s =stub.networkToString();
-		stub.registerClientA(host, port, "GServer");
+		stub.registerClientB(host, port, "GServer2");
 		System.out.println(s);
 		
 	} catch (Exception e) {
@@ -36,7 +36,7 @@ private Team<Objectmon> teamA;
 }
 	@Override
 	public Team<Objectmon> getTeam() throws RemoteException {
-		return this.teamA;
+		return this.teamB;
 	}
 
 	@Override
@@ -47,15 +47,15 @@ private Team<Objectmon> teamA;
 
 	@Override
 	public void networkTick() throws RemoteException {
-		this.teamA.tick();
+		this.teamB.tick();
 		
 	}
 
 	@Override
 	public Objectmon nextObjectmon() throws RemoteException {
-		for(int i=0; i<teamA.size(); i++) {
-			if(((Objectmon) teamA.get(i)).isFainted()!= true) {
-				return (Objectmon) teamA.get(i);
+		for(int i=0; i<teamB.size(); i++) {
+			if(((Objectmon) teamB.get(i)).isFainted()!= true) {
+				return (Objectmon) teamB.get(i);
 			}
 		}
 		return null;
