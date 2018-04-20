@@ -7,6 +7,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 
+import edu.uab.cs203.Objectmon;
 import edu.uab.cs203.Team;
 import edu.uab.cs203.network.GymClient;
 import edu.uab.cs203.network.GymServer;
@@ -25,8 +26,8 @@ public class GServer extends UnicastRemoteObject implements GymServer, NetworkGy
 	private String message;
 	private boolean Bisready;
 	private boolean Aisready;
-	private Team ClientA;
-	private Team ClientB;
+	private GymClient ClientA;
+	private GymClient ClientB;
 	
 	
 	public static void main(String[] args) {
@@ -63,6 +64,7 @@ public class GServer extends UnicastRemoteObject implements GymServer, NetworkGy
 		try {
 		client = (GClient)LocateRegistry.getRegistry(host, port).lookup(registryName);
 		this.listA.add(client);
+		this.Aisready = true;
 		client.printMessage("You have connected!");
 		} 
 		catch (NotBoundException e) {
@@ -77,6 +79,7 @@ public class GServer extends UnicastRemoteObject implements GymServer, NetworkGy
 		try {
 		client = (GClient)LocateRegistry.getRegistry(host, port).lookup(registryName);
 		this.listB.add(client);
+		this.Bisready = true;
 		client.printMessage("You have connected!");
 		} 
 		catch (NotBoundException e) {
@@ -92,7 +95,7 @@ public class GServer extends UnicastRemoteObject implements GymServer, NetworkGy
 
 	@Override
 	public void setTeamAReady(boolean ready) throws RemoteException {
-		// TODO Auto-generated method stub
+		
 	}
 
 	@Override
@@ -103,43 +106,62 @@ public class GServer extends UnicastRemoteObject implements GymServer, NetworkGy
 
 	@Override
 	public void setTeamBReady(boolean ready) throws RemoteException {
-		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
 	public void executeTurn() {
-		// TODO Auto-generated method stub
-		
+		listA.tick();
+		listB.tick();
+		Objectmon teama = listA.nextObjectmon();
+		Objectmon teamb = listB.nextObjectmon();
+		if(teama != null) {
+			teama.nextAttack();
+		}
+		if(teamb != null) {
+			teamb.nextAttack();
+		}
 	}
 
 	@Override
-	public void fight(int arg0) {
-		// TODO Auto-generated method stub
+	public void fight(int rounds) {
+		int count = 0;
+		while (rounds != count) {
+			if(this.getTeamA().canFight()&& this.getTeamB().canFight()) {
+				this.executeTurn();
+				count ++;
+				if(listA.canFight()&& listB.canFight()) {
+					this.broadcastMessage("Team A wins after " + count + " rounds!");
+					count = rounds;
+				 }else if(listB.canFight() && listA.canFight()){
+	                    this.broadcastMessage("Team B wint after "+count+" rounds.");
+	                    count = rounds;
+	                }
+	        }
+	            if(this.getTeamA().canFight() && this.getTeamB().canFight()) {
+	                this.broadcastMessage("Draw");
+				}
+			}
+		}
 		
-	}
 
 	@Override
 	public GymClient getClientA() {
-		// TODO Auto-generated method stub
-		return null;
+		return this.ClientA;
 	}
 
 	@Override
 	public GymClient getClientB() {
-		// TODO Auto-generated method stub
-		return null;
+		return this.ClientB;
 	}
 
 	@Override
 	public Team getTeamA() {
-		// TODO Auto-generated method stub
-		return null;
+		return this.listA;
 	}
 
 	@Override
 	public Team getTeamB() {
-		// TODO Auto-generated method stub
-		return null;
+		return this.listB;
 	}
 }
