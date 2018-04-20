@@ -1,0 +1,39 @@
+	public static void main(String[] args) {
+	String host = "localhost";
+	int port =10002;
+	try {
+		Registry registry = LocateRegistry.getRegistry(host,port);
+		GymServer stub =(GymServer)registry.lookup("GServer");
+		String s =stub.networkToString();
+		System.out.println(s);
+		
+	} catch (Exception e) {
+		System.out.println("EXCEPTION");
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}
+
+
+
+
+
+
+
+server
+
+
+
+	public static void main(String[] args) {
+		try {
+			Runtime.getRuntime().exec("rmiregistry 10002");
+			Registry registry = LocateRegistry.createRegistry(10002);
+			GServer server =new GServer();
+			registry.bind("GServer",server);
+		} catch (Exception  e) {
+			System.out.println("System Error:" + e.toString());
+			e.printStackTrace();
+			
+		}
+		System.out.print("ready to receive tasks");
+		return;
+	}
