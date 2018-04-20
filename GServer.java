@@ -1,4 +1,4 @@
-package edu.uab.cs203.playground;
+package lab10;
 
 import java.awt.List;
 import java.rmi.NotBoundException;
@@ -20,9 +20,6 @@ public class GServer extends UnicastRemoteObject implements GymServer, NetworkGy
 	protected GServer() throws RemoteException {
 		super();
 	}
-
-	private Team listA;
-	private Team listB;
 	private String message;
 	private boolean Bisready;
 	private boolean Aisready;
@@ -32,14 +29,14 @@ public class GServer extends UnicastRemoteObject implements GymServer, NetworkGy
 	
 	public static void main(String[] args) {
 		try {
-			Runtime.getRuntime().exec("rmiregistry 9001");
-			Registry registry = LocateRegistry.createRegistry(9001);
+			Runtime.getRuntime().exec("rmiregistry 10002");
+			Registry registry = LocateRegistry.createRegistry(10002);
 			GServer server =new GServer();
-			registry.bind("computeServer",server);
+			registry.bind("GServer",server);
 		} catch (Exception  e) {
 			System.out.println("System Error:" + e.toString());
 			e.printStackTrace();
-			
+
 		}
 		System.out.print("ready to receive tasks");
 		return;
@@ -48,22 +45,22 @@ public class GServer extends UnicastRemoteObject implements GymServer, NetworkGy
 	@Override
 	public String networkToString() throws RemoteException {
 		// TODO Auto-generated method stub
-		return null;
+		return "cool";
 	}
 
 	@Override
 	public void printMessage(String message) throws RemoteException {
 		this.message = message;
-				System.out.println("This will, like, be a message or something..");	
+				System.out.println("This will, like, be a message or something.."+message);	
 	}
 
 	@Override
 	public void registerClientA(String host, int port, String registryName) throws RemoteException {
 		System.out.println("Registering client: " + host + ":" + port + ":" + registryName);
-		GClient client;
+		GClientA client;
 		try {
-		client = (GClient)LocateRegistry.getRegistry(host, port).lookup(registryName);
-		this.listA.add(client);
+		client = (GClientA)LocateRegistry.getRegistry(host, port).lookup(registryName);
+		this.ClientA =client;
 		this.Aisready = true;
 		client.printMessage("You have connected!");
 		} 
@@ -75,10 +72,10 @@ public class GServer extends UnicastRemoteObject implements GymServer, NetworkGy
 	@Override
 	public void registerClientB(String host, int port, String registryName) throws RemoteException {
 		System.out.println("Registering client: " + host + ":" + port + ":" + registryName);
-			GClient client;
+			GClientA client;
 		try {
-		client = (GClient)LocateRegistry.getRegistry(host, port).lookup(registryName);
-		this.listB.add(client);
+		client = (GClientA)LocateRegistry.getRegistry(host, port).lookup(registryName);
+		this.ClientB=client;
 		this.Bisready = true;
 		client.printMessage("You have connected!");
 		} 
@@ -87,20 +84,9 @@ public class GServer extends UnicastRemoteObject implements GymServer, NetworkGy
 		}
 		}
 		
-		
-	@Override
-	public void setTeamA(Team teamA) throws RemoteException {
-		this.listA = teamA;
-	}
 
 	@Override
 	public void setTeamAReady(boolean ready) throws RemoteException {
-		
-	}
-
-	@Override
-	public void setTeamB(Team teamB) throws RemoteException {
-		this.listB = teamB;
 		
 	}
 
@@ -111,16 +97,27 @@ public class GServer extends UnicastRemoteObject implements GymServer, NetworkGy
 
 	@Override
 	public void executeTurn() {
-		listA.tick();
-		listB.tick();
-		Objectmon teama = listA.nextObjectmon();
-		Objectmon teamb = listB.nextObjectmon();
-		if(teama != null) {
-			teama.nextAttack();
+		try {
+			this.ClientA.networkTick();
+			this.ClientB.networkTick();
+			Objectmon teama = ClientA.nextObjectmon();
+			Objectmon teamb = ClientB.nextObjectmon();
+			
+			if(teama == null &&teamb== null) {
+				return;
+			}
+			this.ClientB.networkApplyDamage(teama, teamb,teama.nextAttack().getDamage(teamb));
+			if(teamb.isFainted()==true) {
+				return;	}
+			this.ClientA.networkApplyDamage(teamb, teama, teamb.nextAttack().getDamage(teama));
+			return;
+			
+		} catch (RemoteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		if(teamb != null) {
-			teamb.nextAttack();
-		}
+		
+		
 	}
 
 	@Override
@@ -130,13 +127,18 @@ public class GServer extends UnicastRemoteObject implements GymServer, NetworkGy
 			if(this.getTeamA().canFight()&& this.getTeamB().canFight()) {
 				this.executeTurn();
 				count ++;
-				if(listA.canFight()&& listB.canFight()) {
-					this.broadcastMessage("Team A wins after " + count + " rounds!");
-					count = rounds;
-				 }else if(listB.canFight() && listA.canFight()){
-	                    this.broadcastMessage("Team B wint after "+count+" rounds.");
-	                    count = rounds;
-	                }
+				try {
+					if(this.ClientA.getTeam().canFight()&& this.ClientB.getTeam().canFight()) {
+						this.broadcastMessage("Team A wins after " + count + " rounds!");
+						count = rounds;
+					 }else if(this.ClientB.getTeam().canFight()&& this.ClientA.getTeam().canFight()){
+					        this.broadcastMessage("Team B wint after "+count+" rounds.");
+					        count = rounds;
+					    }
+				} catch (RemoteException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 	        }
 	            if(this.getTeamA().canFight() && this.getTeamB().canFight()) {
 	                this.broadcastMessage("Draw");
@@ -157,11 +159,33 @@ public class GServer extends UnicastRemoteObject implements GymServer, NetworkGy
 
 	@Override
 	public Team getTeamA() {
-		return this.listA;
+		try {
+			return this.ClientA.getTeam();
+		} catch (RemoteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}return null;
 	}
 
 	@Override
 	public Team getTeamB() {
-		return this.listB;
+		try {
+			return this.ClientB.getTeam();
+		} catch (RemoteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}return null;
+	}
+
+	@Override
+	public void setTeamA(Team arg0) throws RemoteException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setTeamB(Team arg0) throws RemoteException {
+		// TODO Auto-generated method stub
+		
 	}
 }
