@@ -1,4 +1,5 @@
 package lab10;
+import java.io.IOException;
 import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -13,30 +14,38 @@ import edu.uab.cs203.network.GymClient;
 import edu.uab.cs203.network.GymServer;
 
 public class GClientB implements GymClient, Serializable{
-private Team<Objectmon> teamB;
-	public static void main(String[] args) throws RemoteException {
+
+/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+private Team<Objectmon> teamA;
+	public static void main(String[] args) throws IOException {
 	GClientB client = new GClientB();
 	Team<Objectmon> team = new BasicTeam<>();
 	client.setTeam(team);
-	String host = "localhost2";
+	String host = "localhost";
 	int port =10005;
+	
 	
 	try {
 		Registry registry = LocateRegistry.getRegistry(host,port);
 		GymServer stub =(GymServer)registry.lookup("GServer");
 		String s =stub.networkToString();
-		stub.registerClientB(host, port, "GServer2");
-		System.out.println(s);
+		registry.bind("GClientB",client);
 		
+		System.out.println(s);
+		stub.registerClientB(host, 10005,"GClientB");
+		stub.printMessage("woorrkks");
 	} catch (Exception e) {
 		System.out.println("EXCEPTION");
-		// TODO Auto-generated catch block
+		System.out.println("NO GOD NO");
 		e.printStackTrace();
 	}
 }
 	@Override
 	public Team<Objectmon> getTeam() throws RemoteException {
-		return this.teamB;
+		return this.teamA;
 	}
 
 	@Override
@@ -47,15 +56,15 @@ private Team<Objectmon> teamB;
 
 	@Override
 	public void networkTick() throws RemoteException {
-		this.teamB.tick();
+		this.teamA.tick();
 		
 	}
 
 	@Override
 	public Objectmon nextObjectmon() throws RemoteException {
-		for(int i=0; i<teamB.size(); i++) {
-			if(((Objectmon) teamB.get(i)).isFainted()!= true) {
-				return (Objectmon) teamB.get(i);
+		for(int i=0; i<teamA.size(); i++) {
+			if(((Objectmon) teamA.get(i)).isFainted()!= true) {
+				return (Objectmon) teamA.get(i);
 			}
 		}
 		return null;
@@ -64,8 +73,7 @@ private Team<Objectmon> teamB;
 
 	@Override
 	public void printMessage(String arg0) throws RemoteException {
-		// TODO Auto-generated method stub
-		
+		System.out.print("okay");
 	}
 
 	@Override

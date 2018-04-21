@@ -1,4 +1,5 @@
 package lab10;
+import java.io.IOException;
 import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -13,24 +14,32 @@ import edu.uab.cs203.network.GymClient;
 import edu.uab.cs203.network.GymServer;
 
 public class GClientA implements GymClient, Serializable{
+
+/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 private Team<Objectmon> teamA;
-	public static void main(String[] args) throws RemoteException {
-	GClientA client = new GClientA();
-	Team<Objectmon> team = new BasicTeam<>();
-	client.setTeam(team);
-	String host = "localhost";
-	int port =10005;
+	public static void main(String[] args) throws IOException {
+		GClientA client = new GClientA();
+		Team<Objectmon> team = new BasicTeam<>();
+		client.setTeam(team);
+		String host = "localhost";
+		int port =10005;
+		
 	
 	try {
 		Registry registry = LocateRegistry.getRegistry(host,port);
 		GymServer stub =(GymServer)registry.lookup("GServer");
 		String s =stub.networkToString();
-		stub.registerClientA(host, port, "GServer");
-		System.out.println(s);
+		registry.bind("GClientA",client);
 		
+		System.out.println(s);
+		stub.registerClientA(host, 10005,"GClientA");
+		stub.printMessage("woorrkks");
 	} catch (Exception e) {
 		System.out.println("EXCEPTION");
-		// TODO Auto-generated catch block
+		System.out.println("NO GOD NO");
 		e.printStackTrace();
 	}
 }
@@ -64,8 +73,7 @@ private Team<Objectmon> teamA;
 
 	@Override
 	public void printMessage(String arg0) throws RemoteException {
-		// TODO Auto-generated method stub
-		
+		System.out.print("okay");
 	}
 
 	@Override

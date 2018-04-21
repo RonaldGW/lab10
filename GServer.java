@@ -1,6 +1,8 @@
 package lab10;
 
 import java.awt.List;
+import java.io.Serializable;
+import java.rmi.AlreadyBoundException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -13,9 +15,15 @@ import edu.uab.cs203.network.GymClient;
 import edu.uab.cs203.network.GymServer;
 import edu.uab.cs203.network.NetworkGym;
 
-public class GServer extends UnicastRemoteObject implements GymServer, NetworkGym {
+public class GServer extends UnicastRemoteObject implements GymServer, NetworkGym,Serializable{
 	
+
+
+	/**
+	 * 
+	 */
 	private static final long serialVersionUID = 1L;
+
 
 	protected GServer() throws RemoteException {
 		super();
@@ -58,33 +66,68 @@ public class GServer extends UnicastRemoteObject implements GymServer, NetworkGy
 	@Override
 	public void registerClientA(String host, int port, String registryName) throws RemoteException {
 		System.out.println("Registering client: " + host + ":" + port + ":" + registryName);
-		GClientA client;
-		try {
-		client = (GClientA)LocateRegistry.getRegistry(host, port).lookup(registryName);
-		this.ClientA =client;
-		this.Aisready = true;
-		client.printMessage("You have connected!");
-		} 
-		catch (NotBoundException e) {
-			e.printStackTrace();
-		}
+		
+		
+		
+			
+			System.out.print("woot");
+				try {
+					//GServer server =new GServer();
+					//registry.bind("GServer",server);
+					Registry registry = LocateRegistry.getRegistry("localhost",port);
+					 GClientA client = new GClientA();
+					 registry.bind("GClientA", client);
+					this.ClientA =client;
+					this.Aisready = true;
+					System.out.print("ugh");
+					client.printMessage("You have connected!");
+
+					
+				} catch (AlreadyBoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				if(this.Bisready) {
+					ClientA.printMessage("hellor");
+					ClientB.printMessage("yo");
+					
+					System.out.print("hello mother fucker");
+					fight(100);}
+				
+
+		
+		
 		}
 		
 	@Override
 	public void registerClientB(String host, int port, String registryName) throws RemoteException {
 		System.out.println("Registering client: " + host + ":" + port + ":" + registryName);
-			GClientB client;
-		try {
-		client = (GClientB)LocateRegistry.getRegistry(host, port).lookup(registryName);
-		this.ClientB=client;
-		this.Bisready = true;
-		client.printMessage("You have connected!");
-		} 
-		catch (NotBoundException e) {
-			e.printStackTrace();
-		}
-		}
 		
+		
+		
+		
+		System.out.print("woot");
+			try {
+				//GServer server =new GServer();
+				//registry.bind("GServer",server);
+				Registry registry = LocateRegistry.getRegistry("localhost",port);
+				 GClientB client = new GClientB();
+				 registry.lookup("GClientB");
+				this.ClientB =client;
+				this.Bisready = true;
+				System.out.print("ugh");
+				client.printMessage("You have connected!");
+			} catch (NotBoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+			
+
+	
+	
+	}
+	
 
 	@Override
 	public void setTeamAReady(boolean ready) throws RemoteException {
@@ -132,26 +175,32 @@ public class GServer extends UnicastRemoteObject implements GymServer, NetworkGy
 	public void fight(int rounds) {
 		int count = 0;
 		while (rounds != count) {
-			if(this.getTeamA().canFight()&& this.getTeamB().canFight()) {
-				this.executeTurn();
-				count ++;
-				try {
-					if(this.ClientA.getTeam().canFight()&& this.ClientB.getTeam().canFight()) {
-						this.broadcastMessage("Team A wins after " + count + " rounds!");
-						count = rounds;
-					 }else if(this.ClientB.getTeam().canFight()&& this.ClientA.getTeam().canFight()){
-					        this.broadcastMessage("Team B wint after "+count+" rounds.");
-					        count = rounds;
-					    }
-				} catch (RemoteException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-	        }
-	            if(this.getTeamA().canFight() && this.getTeamB().canFight()) {
-	                this.broadcastMessage("Draw");
-				}
+			try {
+				if(ClientA.getTeam().canFight()&&ClientB.getTeam().canFight()) {
+					this.executeTurn();
+					count ++;
+					try {
+						if(this.ClientA.getTeam().canFight()&& this.ClientB.getTeam().canFight()) {
+							this.broadcastMessage("Team A wins after " + count + " rounds!");
+							count = rounds;
+						 }else if(this.ClientB.getTeam().canFight()&& this.ClientA.getTeam().canFight()){
+						        this.broadcastMessage("Team B wint after "+count+" rounds.");
+						        count = rounds;
+						    }
+						  if(this.ClientA.getTeam().canFight() && this.ClientB.getTeam().canFight()) {
+				                this.broadcastMessage("Draw");}
+					}catch (RemoteException e) {
+						System.out.print("fight no go why???");
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					}
+			} catch (RemoteException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
+				
+		}
 		}
 		
 
